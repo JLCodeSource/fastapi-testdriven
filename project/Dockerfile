@@ -1,5 +1,5 @@
 # pull official base image
-FROM python:3.10.4-alpine3.15
+FROM python:3.10.4-slim-buster
 
 
 # set working directory
@@ -13,17 +13,14 @@ ENV PYTHONUNBUFFERED 1
 
 
 # install system dependencies
-RUN apk -U upgrade --no-cache \
-    && apk add --no-cache netcat-openbsd build-base postgresql 
-
+RUN apt-get update \
+    && apt-get -y install netcat gcc postgresql \
+    && apt-get clean
 
 # install python dependencies
-RUN pip install --upgrade pip --no-cache-dir
+RUN pip install --upgrade pip
 COPY ./requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
-
-# clean build-base
-RUN apk del build-base
+RUN pip install -r requirements.txt
 
 # add app
 COPY . .
