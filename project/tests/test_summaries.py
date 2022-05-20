@@ -1,4 +1,3 @@
-from cgi import test
 import json
 from fastapi import status
 
