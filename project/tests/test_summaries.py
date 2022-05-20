@@ -1,7 +1,7 @@
 import json
 
-from fastapi import status
 import pytest
+from fastapi import status
 
 ERRORS = {
     "not_found": "Summary not found",
@@ -51,9 +51,7 @@ ERRORS = {
 
 
 def create_summary(test_app_with_db, url):
-    response = test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": f"{url}"})
-    )
+    response = test_app_with_db.post("/summaries/", data=json.dumps({"url": f"{url}"}))
     summary_id = response.json()["id"]
 
     return summary_id
@@ -373,28 +371,56 @@ def test_update_summary_with_invalid_url(test_app_with_db):
     assert response.json()["detail"][0]["msg"] == ERRORS["invalid_url"]
 
 
-@pytest.mark.parametrize(("add_summary", "summary_id", "payload", "status_code", "detail"),
-                         [
-    [0, 999, {"url": "https://bar.baz", "summary": "updated"},
-     status.HTTP_404_NOT_FOUND, ERRORS["not_found"]],
-    [0, "test", {"url": "https://bar.baz", "summary": "update"},
-     status.HTTP_422_UNPROCESSABLE_ENTITY, ERRORS["not_int"]],
-    [0, 0, {"url": "https://baz.bar", "summary": "updated"},
-     status.HTTP_422_UNPROCESSABLE_ENTITY, ERRORS["not_gt_0"]],
-    [1, None, {}, status.HTTP_422_UNPROCESSABLE_ENTITY,
-     ERRORS["missing_url_&_summary"]],
-    [1, None, {"url": "https://bar.baz"},
-     status.HTTP_422_UNPROCESSABLE_ENTITY, ERRORS["missing_summary"]],
-], ids=["non_existent_id,", "non_int_id", "id_0_or_less", "empty_json",
-        "missing_summary"]
+@pytest.mark.parametrize(
+    ("add_summary", "summary_id", "payload", "status_code", "detail"),
+    [
+        [
+            0,
+            999,
+            {"url": "https://bar.baz", "summary": "updated"},
+            status.HTTP_404_NOT_FOUND,
+            ERRORS["not_found"],
+        ],
+        [
+            0,
+            "test",
+            {"url": "https://bar.baz", "summary": "update"},
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            ERRORS["not_int"],
+        ],
+        [
+            0,
+            0,
+            {"url": "https://baz.bar", "summary": "updated"},
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            ERRORS["not_gt_0"],
+        ],
+        [
+            1,
+            None,
+            {},
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            ERRORS["missing_url_&_summary"],
+        ],
+        [
+            1,
+            None,
+            {"url": "https://bar.baz"},
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            ERRORS["missing_summary"],
+        ],
+    ],
+    ids=[
+        "non_existent_id,",
+        "non_int_id",
+        "id_0_or_less",
+        "empty_json",
+        "missing_summary",
+    ],
 )
 def test_update_summary_invalid(
-        test_app_with_db,
-        add_summary,
-        summary_id,
-        payload,
-        status_code,
-        detail):
+    test_app_with_db, add_summary, summary_id, payload, status_code, detail
+):
     # Given
     # test_app_with_db
 
@@ -405,8 +431,9 @@ def test_update_summary_invalid(
 
     # When
     # User tries to update the summary using invalid data
-    response = test_app_with_db.put(f"/summaries/{summary_id}/",
-                                    data=json.dumps(payload))
+    response = test_app_with_db.put(
+        f"/summaries/{summary_id}/", data=json.dumps(payload)
+    )
 
     # And
     # The status_code is status_code
