@@ -1,6 +1,62 @@
 import json
 
 from fastapi import status
+import pytest
+
+ERRORS = {
+    "not_found": "Summary not found",
+    "invalid_url": "URL scheme not permitted",
+    "not_int": [
+        {
+            "loc": ["path", "id"],
+            "msg": "value is not a valid integer",
+            "type": "type_error.integer",
+        }
+    ],
+    "not_gt_0": [
+        {
+            "loc": ["path", "id"],
+            "msg": "ensure this value is greater than 0",
+            "type": "value_error.number.not_gt",
+            "ctx": {"limit_value": 0},
+        }
+    ],
+    "missing_url_&_summary": [
+        {
+            "loc": ["body", "url"],
+            "msg": "field required",
+            "type": "value_error.missing",
+        },
+        {
+            "loc": ["body", "summary"],
+            "msg": "field required",
+            "type": "value_error.missing",
+        },
+    ],
+    "missing_summary": [
+        {
+            "loc": ["body", "summary"],
+            "msg": "field required",
+            "type": "value_error.missing",
+        }
+    ],
+    "missing_url": [
+        {
+            "loc": ["body", "url"],
+            "msg": "field required",
+            "type": "value_error.missing",
+        }
+    ],
+}
+
+
+def create_summary(test_app_with_db, url):
+    response = test_app_with_db.post(
+        "/summaries/", data=json.dumps({"url": f"{url}"})
+    )
+    summary_id = response.json()["id"]
+
+    return summary_id
 
 
 def test_create_summary(test_app_with_db):
@@ -37,15 +93,7 @@ def test_create_summary_missing_url(test_app):
 
     # And
     # The json reponse detail explains what is missing
-    assert response.json() == {
-        "detail": [
-            {
-                "loc": ["body", "url"],
-                "msg": "field required",
-                "type": "value_error.missing",
-            }
-        ]
-    }
+    assert response.json()["detail"] == ERRORS["missing_url"]
 
 
 def test_create_summary_invalid_url(test_app):
@@ -95,7 +143,7 @@ def test_read_summary_nonexistent_id(test_app_with_db):
 
     # And
     # The response will be Summary not found
-    assert response.json()["detail"] == "Summary not found"
+    assert response.json()["detail"] == ERRORS["not_found"]
 
 
 def test_read_summary_0_or_less(test_app_with_db):
@@ -161,6 +209,7 @@ def test_read_all_summaries(test_app_with_db):
 
     response_list = response.json()
     assert len(list(filter(lambda d: d["id"] == summary_id, response_list))) == 1
+    # Todo improve summaries testing
 
 
 def test_remove_summary(test_app_with_db):
@@ -297,156 +346,6 @@ def test_update_summary(test_app_with_db):
     assert response_dict["created_at"]
 
 
-def test_update_summary_incorect_id(test_app_with_db):
-    # Given
-    # test_app_with_db
-
-    # When
-    # The user sends an update with an incorrect id
-    response = test_app_with_db.put(
-        "/summaries/999/",
-        data=json.dumps({"url": "https://bar.baz", "summary": "updated"}),
-    )
-
-    # Then
-    # The status code will be 404 not found
-    assert response.status_code == 404
-
-    # And
-    # The detail will be "Summary not found"
-    assert response.json()["detail"] == "Summary not found"
-
-
-def test_update_summary_non_int_id(test_app):
-    # Given
-    # test_app
-
-    # When
-    # A non-int id is supplied
-    response = test_app.put(
-        "/summaries/test/",
-        data=json.dumps({"url": "https://bar.baz", "summary": "updated"}),
-    )
-
-    # Then
-    # The status code will be 422 unprocessable entity
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    # And
-    # The response will explain the the id should be an int
-    assert response.json() == {
-        "detail": [
-            {
-                "loc": ["path", "id"],
-                "msg": "value is not a valid integer",
-                "type": "type_error.integer",
-            }
-        ]
-    }
-
-
-def test_update_summary_id_0_or_less(test_app):
-    # Given
-    # test_app
-
-    # When
-    # The user attempts to update a summary with an id of 0 or less
-    response = test_app.put(
-        "/summaries/0/",
-        data=json.dumps({"url": "https://foo.bar", "summary": "updated"}),
-    )
-
-    # Then
-    # The status code will be 422 unprocessable entity
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    # And
-    # The response json detail will explain that the id must be greater than 0
-    assert response.json() == {
-        "detail": [
-            {
-                "loc": ["path", "id"],
-                "msg": "ensure this value is greater than 0",
-                "type": "value_error.number.not_gt",
-                "ctx": {"limit_value": 0},
-            }
-        ]
-    }
-
-
-def test_update_summary_invalid_json(test_app_with_db):
-    # Given
-    # test_app_with_db
-
-    # And
-    # There is a summary in the database
-
-    response = test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
-    )
-    summary_id = response.json()["id"]
-
-    # When
-    # The user sends an update with invalid json
-    response = test_app_with_db.put(f"/summaries/{summary_id}/", data=json.dumps({}))
-
-    # Then
-    # The response will be 422 UNPROCESSABLE_ENTITY
-    assert response.status_code == 422
-
-    # And
-    # The json will have the required detail
-    assert response.json() == {
-        "detail": [
-            {
-                "loc": ["body", "url"],
-                "msg": "field required",
-                "type": "value_error.missing",
-            },
-            {
-                "loc": ["body", "summary"],
-                "msg": "field required",
-                "type": "value_error.missing",
-            },
-        ]
-    }
-
-
-def test_update_summary_missing_summary(test_app_with_db):
-    # Given
-    # test_app_with_db
-
-    # And
-    # There is a summary in the database
-
-    response = test_app_with_db.post(
-        "/summaries/", data=json.dumps({"url": "https://foo.bar"})
-    )
-    summary_id = response.json()["id"]
-
-    # When
-    # The user sends a url without a summary
-    response = test_app_with_db.put(
-        f"/summaries/{summary_id}/", data=json.dumps({"url": "https://bar.baz"})
-    )
-
-    # Then
-    # The response will be 422 Unprocessable entity
-    assert response.status_code == 422
-
-    # And
-    # The response json will highlight the missing summary
-    assert response.json() == {
-        "detail": [
-            {
-                "loc": ["body", "summary"],
-                "msg": "field required",
-                "type": "value_error.missing",
-            }
-        ]
-    }
-
-
 def test_update_summary_with_invalid_url(test_app_with_db):
     # Given
     # test_app_with_db
@@ -471,4 +370,48 @@ def test_update_summary_with_invalid_url(test_app_with_db):
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     # And the response detail explains that the URL scheme is not permitted
-    assert response.json()["detail"][0]["msg"] == "URL scheme not permitted"
+    assert response.json()["detail"][0]["msg"] == ERRORS["invalid_url"]
+
+
+@pytest.mark.parametrize(("add_summary", "summary_id", "payload", "status_code", "detail"),
+                         [
+    [0, 999, {"url": "https://bar.baz", "summary": "updated"},
+     status.HTTP_404_NOT_FOUND, ERRORS["not_found"]],
+    [0, "test", {"url": "https://bar.baz", "summary": "update"},
+     status.HTTP_422_UNPROCESSABLE_ENTITY, ERRORS["not_int"]],
+    [0, 0, {"url": "https://baz.bar", "summary": "updated"},
+     status.HTTP_422_UNPROCESSABLE_ENTITY, ERRORS["not_gt_0"]],
+    [1, None, {}, status.HTTP_422_UNPROCESSABLE_ENTITY,
+     ERRORS["missing_url_&_summary"]],
+    [1, None, {"url": "https://bar.baz"},
+     status.HTTP_422_UNPROCESSABLE_ENTITY, ERRORS["missing_summary"]],
+], ids=["non_existent_id,", "non_int_id", "id_0_or_less", "empty_json",
+        "missing_summary"]
+)
+def test_update_summary_invalid(
+        test_app_with_db,
+        add_summary,
+        summary_id,
+        payload,
+        status_code,
+        detail):
+    # Given
+    # test_app_with_db
+
+    # And
+    # [If there is a summary in the database]
+    if add_summary:
+        summary_id = create_summary(test_app_with_db, "https://bar.baz")
+
+    # When
+    # User tries to update the summary using invalid data
+    response = test_app_with_db.put(f"/summaries/{summary_id}/",
+                                    data=json.dumps(payload))
+
+    # And
+    # The status_code is status_code
+    response.status_code == status_code
+
+    # And
+    # The json detail is detail
+    response.json()["detail"] == detail
