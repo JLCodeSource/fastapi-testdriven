@@ -1,4 +1,5 @@
 import json
+
 from fastapi import status
 
 
@@ -69,9 +70,7 @@ def test_read_all_summaries(test_app_with_db):
     assert response.status_code == status.HTTP_200_OK
 
     response_list = response.json()
-    assert len(
-        list(filter(lambda d: d["id"] == summary_id, response_list))
-    ) == 1
+    assert len(list(filter(lambda d: d["id"] == summary_id, response_list))) == 1
 
 
 def test_remove_summary(test_app_with_db):
@@ -88,9 +87,7 @@ def test_remove_summary(test_app_with_db):
 
     # When
     # The user executes a delete on "/summaries/{id}"
-    response = test_app_with_db.delete(
-        f"/summaries/{summary_id}/"
-    )
+    response = test_app_with_db.delete(f"/summaries/{summary_id}/")
 
     # Then
     # The status code is 200 ok
@@ -98,8 +95,7 @@ def test_remove_summary(test_app_with_db):
 
     # And
     # The response content is {"id": "{summary_id"}
-    assert response.json() == {"id": summary_id,
-                               "url": "https://foo.bar"}
+    assert response.json() == {"id": summary_id, "url": "https://foo.bar"}
 
     # And
     # The summary database is removed from the database
@@ -137,9 +133,10 @@ def test_update_summary(test_app_with_db):
 
     # When
     # The user sends a put message to /summaries/{id}
-    response = test_app_with_db.put(f"/summaries/{summary_id}/",
-                                    data=json.dumps({"url": "https://bar.baz",
-                                                     "summary": "updated"}))
+    response = test_app_with_db.put(
+        f"/summaries/{summary_id}/",
+        data=json.dumps({"url": "https://bar.baz", "summary": "updated"}),
+    )
 
     # Then
     # The status code will be 200 ok
@@ -160,9 +157,10 @@ def test_update_summary_incorect_id(test_app_with_db):
 
     # When
     # The user sends an update with an incorrect id
-    response = test_app_with_db.put("/summaries/999/",
-                                    data=json.dumps({"url": "https://bar.baz",
-                                                     "summary": "updated"}))
+    response = test_app_with_db.put(
+        "/summaries/999/",
+        data=json.dumps({"url": "https://bar.baz", "summary": "updated"}),
+    )
 
     # Then
     # The status code will be 404 not found
@@ -187,10 +185,7 @@ def test_update_summary_invalid_json(test_app_with_db):
 
     # When
     # The user sends an update with invalid json
-    response = test_app_with_db.put(
-        f"/summaries/{summary_id}/",
-        data=json.dumps({})
-    )
+    response = test_app_with_db.put(f"/summaries/{summary_id}/", data=json.dumps({}))
 
     # Then
     # The response will be 422 UNPROCESSABLE_ENTITY
@@ -208,8 +203,8 @@ def test_update_summary_invalid_json(test_app_with_db):
             {
                 "loc": ["body", "summary"],
                 "msg": "field required",
-                "type": "value_error.missing"
-            }
+                "type": "value_error.missing",
+            },
         ]
     }
 
@@ -229,8 +224,7 @@ def test_update_summary_missing_summary(test_app_with_db):
     # When
     # The user sends a url without a summary
     response = test_app_with_db.put(
-        f"/summaries/{summary_id}/", data=json.dumps({"url":
-                                                      "https://bar.baz"})
+        f"/summaries/{summary_id}/", data=json.dumps({"url": "https://bar.baz"})
     )
 
     # Then

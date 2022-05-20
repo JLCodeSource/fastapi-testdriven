@@ -1,6 +1,9 @@
 from typing import Optional
 
-from app.models.pydantic import SummaryPayloadSchema, SummaryUpdatePayloadSchema
+# fmt: off
+from app.models.pydantic import (SummaryPayloadSchema,
+                                 SummaryUpdatePayloadSchema)
+# fmt: on
 from app.models.tortoise import TextSummary
 
 
@@ -32,8 +35,9 @@ async def delete(id: int) -> int:
 
 
 async def put(id: int, payload: SummaryUpdatePayloadSchema) -> Optional[dict]:
-    summary = await TextSummary.filter(id=id).update(url=payload.url,
-                                                     summary=payload.summary)
+    summary = await TextSummary.filter(id=id).update(
+        url=payload.url, summary=payload.summary
+    )
     if not summary:
         return None
 
