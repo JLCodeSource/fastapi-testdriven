@@ -3,58 +3,8 @@ import json
 import pytest
 from fastapi import status
 
-ERRORS = {
-    "not_found": "Summary not found",
-    "invalid_url": "URL scheme not permitted",
-    "not_int": [
-        {
-            "loc": ["path", "id"],
-            "msg": "value is not a valid integer",
-            "type": "type_error.integer",
-        }
-    ],
-    "not_gt_0": [
-        {
-            "loc": ["path", "id"],
-            "msg": "ensure this value is greater than 0",
-            "type": "value_error.number.not_gt",
-            "ctx": {"limit_value": 0},
-        }
-    ],
-    "missing_url_&_summary": [
-        {
-            "loc": ["body", "url"],
-            "msg": "field required",
-            "type": "value_error.missing",
-        },
-        {
-            "loc": ["body", "summary"],
-            "msg": "field required",
-            "type": "value_error.missing",
-        },
-    ],
-    "missing_summary": [
-        {
-            "loc": ["body", "summary"],
-            "msg": "field required",
-            "type": "value_error.missing",
-        }
-    ],
-    "missing_url": [
-        {
-            "loc": ["body", "url"],
-            "msg": "field required",
-            "type": "value_error.missing",
-        }
-    ],
-}
-
-
-def create_summary(test_app_with_db, url):
-    response = test_app_with_db.post("/summaries/", data=json.dumps({"url": f"{url}"}))
-    summary_id = response.json()["id"]
-
-    return summary_id
+from .errors import ERRORS
+from .helpers import create_summary
 
 
 def test_create_summary(test_app_with_db):
@@ -411,11 +361,11 @@ def test_update_summary_with_invalid_url(test_app_with_db):
         ],
     ],
     ids=[
-        "non_existent_id,",
-        "non_int_id",
-        "id_0_or_less",
-        "empty_json",
-        "missing_summary",
+        "e2e_non_existent_id,",
+        "e2e_non_int_id",
+        "e2e_id_0_or_less",
+        "e2e_empty_json",
+        "e2e_missing_summary",
     ],
 )
 def test_update_summary_invalid(
@@ -435,7 +385,7 @@ def test_update_summary_invalid(
         f"/summaries/{summary_id}/", data=json.dumps(payload)
     )
 
-    # And
+    # Then
     # The status_code is status_code
     response.status_code == status_code
 
