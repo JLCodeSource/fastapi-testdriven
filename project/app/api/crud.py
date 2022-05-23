@@ -1,6 +1,5 @@
 from typing import Optional
 
-from app.summarizer import generate_summary
 # fmt: off
 from app.models.pydantic import (SummaryPayloadSchema,
                                  SummaryUpdatePayloadSchema)
@@ -9,10 +8,9 @@ from app.models.tortoise import TextSummary
 
 
 async def post(payload: SummaryPayloadSchema) -> int:
-    article_summary = generate_summary(payload.url)
     summary = TextSummary(
         url=payload.url,
-        summary=article_summary,
+        summary="",
     )
     await summary.save()
     return summary.id

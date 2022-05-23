@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 from fastapi import status
-from pyparsing import DebugStartAction
 
 from .errors import ERRORS
 
@@ -13,6 +12,12 @@ from app.api import crud, summaries
 def test_create_summary(test_app, monkeypatch):
     # Given
     # test_app
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
     # mock test payloads for request & response

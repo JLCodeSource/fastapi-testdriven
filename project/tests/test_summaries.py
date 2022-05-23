@@ -5,17 +5,22 @@ from fastapi import status
 
 from .errors import ERRORS
 from .helpers import create_summary
+from app.api import summaries
 
 
-def test_create_summary(test_app_with_db):
-
+def test_create_summary(test_app_with_db, monkeypatch):
     # Given
     # test_app_with_db
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # When
     # posting the json
     # {"url": "https://foo.bar"} to /summaries/
-
     response = test_app_with_db.post(
         "/summaries/", data=json.dumps({"url": "https://foo.bar"})
     )
@@ -61,7 +66,16 @@ def test_create_summary_invalid_url(test_app):
     assert response.json()["detail"][0]["msg"] == "URL scheme not permitted"
 
 
-def test_read_summary(test_app_with_db):
+def test_read_summary(test_app_with_db, monkeypatch):
+    # Given
+    # test_app_with_db
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
     response = test_app_with_db.post(
         "/summaries/", data=json.dumps({"url": "https://foo.bar"})
     )
@@ -73,7 +87,7 @@ def test_read_summary(test_app_with_db):
     response_dict = response.json()
     assert response_dict["id"] == summary_id
     assert response_dict["url"] == "https://foo.bar"
-    assert response_dict["summary"]
+    assert response_dict["summary"] == ""
     assert response_dict["created_at"]
 
 
@@ -145,24 +159,43 @@ def test_read_summary_non_int_id(test_app):
     }
 
 
-def test_read_all_summaries(test_app_with_db):
+def test_read_all_summaries(test_app_with_db, monkeypatch):
+    # Given
+    # test_app_with_db
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
+
+    # When a url is posted
     response = test_app_with_db.post(
         "/summaries/", data=json.dumps({"url": "https://foo.bar"})
     )
-
     summary_id = response.json()["id"]
-
     response = test_app_with_db.get("/summaries/")
+
+    # Then
+    # The status code will be 200 ok
     assert response.status_code == status.HTTP_200_OK
 
+    # And
+    # The response json will be a list of urls with the new summary
     response_list = response.json()
     assert len(list(filter(lambda d: d["id"] == summary_id, response_list))) == 1
     # Todo improve summaries testing
 
 
-def test_remove_summary(test_app_with_db):
+def test_remove_summary(test_app_with_db, monkeypatch):
     # Given
     # test_app_with_db
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
     # There is a summary in the database
@@ -262,9 +295,15 @@ def test_remove_summary_with_id_0_or_less(test_app_with_db):
     }
 
 
-def test_update_summary(test_app_with_db):
+def test_update_summary(test_app_with_db, monkeypatch):
     # Given
     # test_app_with_db
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
     # There is a summary in the database
@@ -294,9 +333,15 @@ def test_update_summary(test_app_with_db):
     assert response_dict["created_at"]
 
 
-def test_update_summary_with_invalid_url(test_app_with_db):
+def test_update_summary_with_invalid_url(test_app_with_db, monkeypatch):
     # Given
     # test_app_with_db
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
     # There is a summary in the database
@@ -369,10 +414,16 @@ def test_update_summary_with_invalid_url(test_app_with_db):
     ],
 )
 def test_update_summary_invalid(
-    test_app_with_db, add_summary, summary_id, payload, status_code, detail
+    test_app_with_db, monkeypatch, add_summary, summary_id, payload, status_code, detail
 ):
     # Given
     # test_app_with_db
+
+    # And
+    # Mock generate summary
+    def mock_generate_summary(summary_id, url):
+        return None
+    monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
     # [If there is a summary in the database]
