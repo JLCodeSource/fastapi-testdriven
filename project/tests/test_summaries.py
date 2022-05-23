@@ -3,9 +3,10 @@ import json
 import pytest
 from fastapi import status
 
+from app.api import summaries
+
 from .errors import ERRORS
 from .helpers import create_summary
-from app.api import summaries
 
 
 def test_create_summary(test_app_with_db, monkeypatch):
@@ -16,6 +17,7 @@ def test_create_summary(test_app_with_db, monkeypatch):
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # When
@@ -74,6 +76,7 @@ def test_read_summary(test_app_with_db, monkeypatch):
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     response = test_app_with_db.post(
@@ -167,6 +170,7 @@ def test_read_all_summaries(test_app_with_db, monkeypatch):
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # When a url is posted
@@ -195,6 +199,7 @@ def test_remove_summary(test_app_with_db, monkeypatch):
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
@@ -303,6 +308,7 @@ def test_update_summary(test_app_with_db, monkeypatch):
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
@@ -341,6 +347,7 @@ def test_update_summary_with_invalid_url(test_app_with_db, monkeypatch):
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
@@ -423,6 +430,7 @@ def test_update_summary_invalid(
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And

@@ -1,12 +1,12 @@
 import json
 from datetime import datetime
-from fastapi import status
-
-from .errors import ERRORS
 
 import pytest
+from fastapi import status
 
 from app.api import crud, summaries
+
+from .errors import ERRORS
 
 
 def test_create_summary(test_app, monkeypatch):
@@ -17,6 +17,7 @@ def test_create_summary(test_app, monkeypatch):
     # Mock generate summary
     def mock_generate_summary(summary_id, url):
         return None
+
     monkeypatch.setattr(summaries, "generate_summary", mock_generate_summary)
 
     # And
@@ -35,8 +36,10 @@ def test_create_summary(test_app, monkeypatch):
 
     # When
     # The test_request_payload is posted
-    response = test_app.post("/summaries/",
-                             data=json.dumps(test_request_payload),)
+    response = test_app.post(
+        "/summaries/",
+        data=json.dumps(test_request_payload),
+    )
 
     # Then
     # The status code is 201 created
@@ -122,6 +125,7 @@ def test_read_summary_incorrect_id(test_app, monkeypatch):
     # A mock get
     async def mock_get(id):
         return None
+
     monkeypatch.setattr(crud, "get", mock_get)
 
     # When
@@ -155,13 +159,14 @@ def test_read_all_summaries(test_app, monkeypatch):
             "url": "https://testdriven.io/",
             "summary": "summary",
             "created_at": datetime.utcnow().isoformat(),
-        }
+        },
     ]
 
     # And
     # Mock get all
     async def mock_get_all():
         return test_data
+
     monkeypatch.setattr(crud, "get_all", mock_get_all)
 
     # When
@@ -190,6 +195,7 @@ def test_remove_summary(test_app, monkeypatch):
             "summary": "summary",
             "created_at": datetime.utcnow().isoformat(),
         }
+
     monkeypatch.setattr(crud, "get", mock_get)
 
     # And
@@ -200,6 +206,7 @@ def test_remove_summary(test_app, monkeypatch):
     # Mock delete
     async def mock_delete(id):
         return id
+
     monkeypatch.setattr(crud, "delete", mock_delete)
 
     # When
@@ -223,6 +230,7 @@ def test_remove_summary_incorrect_id(test_app, monkeypatch):
     # Mock get returning no summary
     async def mock_get(id):
         return None
+
     monkeypatch.setattr(crud, "get", mock_get)
 
     # When
@@ -256,12 +264,15 @@ def test_update_summary(test_app, monkeypatch):
     # A mock put
     async def mock_put(id, payload):
         return test_response_payload
+
     monkeypatch.setattr(crud, "put", mock_put)
 
     # When
     # An update request is sent
-    response = test_app.put("/summaries/1/",
-                            data=json.dumps(test_request_payload),)
+    response = test_app.put(
+        "/summaries/1/",
+        data=json.dumps(test_request_payload),
+    )
 
     # Then
     # The status code will be 200 ok
@@ -314,8 +325,9 @@ def test_update_summary(test_app, monkeypatch):
         "unit_missing_summary",
     ],
 )
-def test_update_summary_invalid(test_app, monkeypatch, summary_id, payload,
-                                status_code, detail):
+def test_update_summary_invalid(
+    test_app, monkeypatch, summary_id, payload, status_code, detail
+):
     # TODO
     # Work out how this actually tests anything
 
@@ -335,8 +347,10 @@ def test_update_summary_invalid(test_app, monkeypatch, summary_id, payload,
 
     # When
     # User tries to update the summary using invalid data
-    response = test_app.put(f"/summaries/{summary_id}/",
-                            data=json.dumps(payload),)
+    response = test_app.put(
+        f"/summaries/{summary_id}/",
+        data=json.dumps(payload),
+    )
 
     # Then
     # The status code is status_code
@@ -353,9 +367,10 @@ def test_update_summary_invalid_url(test_app):
 
     # When
     # An invalid url is posted to the summary id
-    response = test_app.put("/summaries/1/",
-                            data=json.dumps({"url": "invalid://url",
-                                             "summary": "updated"}),)
+    response = test_app.put(
+        "/summaries/1/",
+        data=json.dumps({"url": "invalid://url", "summary": "updated"}),
+    )
 
     # Then
     # The status code will be 422 unprocessable entity

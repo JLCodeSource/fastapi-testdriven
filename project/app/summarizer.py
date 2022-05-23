@@ -1,6 +1,6 @@
-import asyncio
 import nltk
 from newspaper import Article
+
 from .models.tortoise import TextSummary
 
 
