@@ -1,3 +1,42 @@
+###########
+# BUILDER #
+###########
+
+# pull official base image
+FROM python:3.10.4-alpine3.15 as builder
+
+# install system dependencies
+RUN apk -U upgrade --no-cache \
+    && apk add --no-cache netcat-openbsd build-base postgresql 
+
+# set work directory
+WORKDIR /usr/src/app
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install python dependencies
+RUN pip install --upgrade pip --no-cache-dir
+COPY ./requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt --no-cache-dir
+
+# clean build-base
+RUN apk del build-base
+
+
+# lint
+COPY . /usr/src/app/
+RUN pip install black>=21.12b0 flake8>=4.0.1 isort>=5.10.1
+RUN flake8 .
+RUN black --exclude=migrations .
+RUN isort .
+
+
+#########
+# FINAL #
+#########
+
 # pull official base image
 FROM python:3.10.4-alpine3.15
 
@@ -20,14 +59,18 @@ ENV PYTHONUNBUFFERED 1
 ENV ENVIRONMENT prod
 ENV TESTING 0
 
+
 # install system dependencies
 RUN apk -U upgrade --no-cache \
     && apk add --no-cache netcat-openbsd build-base postgresql 
 
+
 # install python dependencies
-RUN pip install --upgrade pip --no-cache-dir
-COPY ./requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+COPY --from=builder /usr/src/app/wheels /wheels
+COPY --from=builder /usr/src/app/requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install --no-cache /wheels/*
+RUN pip install "uvicorn[standard]>=0.16.0"
 
 # clean build-base
 RUN apk del build-base

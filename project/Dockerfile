@@ -20,7 +20,8 @@ RUN apk -U upgrade --no-cache \
 # install python dependencies
 RUN pip install --upgrade pip --no-cache-dir
 COPY ./requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+COPY ./requirements-dev.txt .
+RUN pip install -r requirements-dev.txt --no-cache-dir
 
 # clean build-base
 RUN apk del build-base
