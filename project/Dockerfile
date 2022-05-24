@@ -14,7 +14,7 @@ ENV PYTHONUNBUFFERED 1
 
 # install system dependencies
 RUN apk -U upgrade --no-cache \
-    && apk add --no-cache netcat-openbsd build-base postgresql 
+    && apk add --no-cache netcat-openbsd build-base postgresql trivy
 
 
 # install python dependencies
