@@ -31,7 +31,7 @@ RUN pip install black>=21.12b0 flake8>=4.0.1 isort>=5.10.1
 RUN flake8 .
 RUN black --exclude=migrations .
 RUN isort .
-
+RUN bandit -r .
 
 #########
 # FINAL #
